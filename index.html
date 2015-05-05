@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8" />
+	<title>Structures</title>
+	<script src="QueueA.js"></script>
+	<script src="QueueC.js"></script>
+	<script src="QueueP.js"></script>
+	<script src="QueueR.js"></script>
+	<script src="List.js"></script>
+	<script src="List2.js"></script>
+	
+	<script>
+		// define the maximum benchmark length
+		var MAXIMUM_BENCHMARK_LENGTH = Math.pow(2, 25);
+		
+		// initialise the benchmark length
+		var benchmarkTest   = 1;
+		var benchmarkLength = 1;
+
+		/**
+		 * Initialises the benchmark.
+	     */
+		function initialiseBenchmark() {
+			// ensure the button is hidden and the table is visible
+			document.getElementById("benchmarkButton").style.display  = "none";
+			document.getElementById("benchmarkResults").style.display = "table";
+			// run the benchmark after a short delay to ensure the page is redrawn
+			window.setTimeout(benchmarkQueues, 100);
+		}
+		
+		/**
+		 * Runs a single iteration of the benchmark, and sets the next iteration to run after a delay.
+		 */
+		function benchmarkQueues() {
+			// run the benchmark
+			var results = [
+				benchmarkQueue(benchmarkLength, new QueueA()),
+				benchmarkQueue(benchmarkLength, new QueueC()),
+				benchmarkQueue(benchmarkLength, new QueueP()),
+				benchmarkQueue(benchmarkLength, new QueueR()),
+				benchmarkList(benchmarkLength,  new List()),
+				benchmarkList(benchmarkLength,  new List2()),
+				benchmarkArray(benchmarkLength)
+			];
+		
+			// add a new row to the table
+			var table = document.getElementById("benchmarkResults");
+			var row = table.insertRow(-1);
+			
+			// output the benchmark test number and length
+			var cell = row.insertCell(0);
+			cell.appendChild(document.createTextNode(benchmarkTest));
+			var cell = row.insertCell(1);
+			cell.appendChild(document.createTextNode(benchmarkLength));
+
+			// output the benchmark results
+			results.forEach(function (value, index) {
+				var cell = row.insertCell(index + 2);
+				cell.appendChild(document.createTextNode(addCommas(Math.round(value))));
+			});
+			
+			// run another iteration if necessary
+			benchmarkTest   += 1;
+			benchmarkLength *= 2;
+			
+			if (benchmarkLength <= MAXIMUM_BENCHMARK_LENGTH) {
+				window.setTimeout(benchmarkQueues, 500);
+    		}
+		}
+		
+		/**
+		 * Returns the number of operations performed in a second for a queue
+	     * as an array of the specified length.
+	     */
+		function benchmarkArray(length) {
+			// create the queue
+			var queue = [];
+			
+			// fill the queue to the appropriate length
+			for (var index = 0; index < length; index++) {
+				queue.push(null);
+			}
+			
+			// initialise the count of operations
+			var operations = 0;
+			
+			// initialise the start and end times
+			var start = (new Date()).getTime();
+			var end  = 0;
+			
+			// loop until the benchmark has run for at least half a second
+			while (end - start < 500) {
+				// enqueue and dequeue 100 items
+				for (var index = 0; index < 100; index ++) {
+					queue.push(null);
+					queue.unshift();
+				}
+				// update the count of operations
+				operations += 100;
+				// update the end time
+				end = (new Date()).getTime();
+			}
+			
+			// return the number of operations performed per second
+			return (operations / (end - start) * 500);
+		}
+		
+		/**
+		 * Returns the number of operations performed in a second for a queue
+		 * as an object of the specified length.
+		 */
+		function benchmarkQueue(length, queue) {
+			// fill the queue to the appropriate length
+			for (var index = 0; index < length; index++) {
+				queue.enqueue(null);
+			}
+			
+			// initialise the count of operations
+			var operations = 0;
+			
+			// initialise the start and end times
+			var start = (new Date()).getTime();
+			var end  = 0;
+			
+			// loop until the benchmark has run for at least half a second
+			while (end - start < 500) {
+				// enqueue and dequeue 100 items
+				for (var index = 0; index < 100; index ++) {
+					queue.enqueue(null);
+					queue.dequeue();
+				}
+				// update the count of operations
+				operations += 100;
+				// update the end time
+				end = (new Date()).getTime();
+			}
+			
+			// return the number of operations performed per second
+			return (operations / (end - start) * 500);
+		}
+		
+		/**
+		 * Returns the number of operations performed in a second for a list
+		 * as an object of the specified length.
+		 */
+		function benchmarkList(length, list) {
+			// fill the queue to the appropriate length
+			for (var index = 0; index < length; index++) {
+				list.addNext(null);
+			}
+			
+			// initialise the count of operations
+			var operations = 0;
+    		
+			// initialise the start and end times
+			var start = (new Date()).getTime();
+			var end  = 0;
+			
+			// loop until the benchmark has run for at least half a second
+			while (end - start < 500) {
+				// enqueue and dequeue 100 items
+				for (var index = 0; index < 100; index ++) {
+					list.addNext(null);
+					list.removePrev();
+				}
+				// update the count of operations
+				operations += 100;
+				// update the end time
+				end = (new Date()).getTime();
+			}
+			
+			// return the number of operations performed per second
+			return (operations / (end - start) * 500);
+		}
+		
+		function addCommas(nStr) {
+			nStr += '';
+			x = nStr.split('.');
+			x1 = x[0];
+			x2 = x.length > 1 ? '.' + x[1] : '';
+			var rgx = /(\d+)(\d{3})/;
+			while (rgx.test(x1)) {
+				x1 = x1.replace(rgx, '$1' + ',' + '$2');
+			}
+			return x1 + x2;
+		}
+	</script>
+	<style type="text/css">
+		body {
+			font-family: Consolas, "Courier New", Courier, monospace;
+			font-size: 0.875em;
+		}
+		h1 {
+			font-family: Georgia, "Times New Roman", Times, serif;
+			font-weight: normal;
+		}
+		a {
+			text-decoration: none;
+			color: #F00;
+			font-weight: bold;
+		}
+		#benchmarkResults {
+			display: none;
+			border-spacing: 0;
+		}
+		#benchmarkResults td, #benchmarkResults th {
+			border-right: 1px solid silver;
+			text-align: right;
+			padding: 5px;
+			margin: 0px;
+		}
+	</style>
+</head>
+	
+<body>
+	<h1>Structures Tests</h1>
+	<p id="benchmarkButton"><a href="#" onClick="initialiseBenchmark();">Run Benchmark</a></p>
+	<table id="benchmarkResults">
+		<tbody>
+			<tr>
+				<th>Test</th>
+				<th>Queue length</th>
+				<th>Array Queue</th>
+				<th>Closure Queue</th>
+				<th>Prototype Queue</th>
+				<th>Private Queue</th>
+				<th>Prototype List</th>
+				<th>Private List</th>
+				<th>Array</th>
+			</tr>
+		</tbody>
+	</table>
+</body>
+</html>
